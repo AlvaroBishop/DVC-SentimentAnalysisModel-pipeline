@@ -1,0 +1,115 @@
+schema: '2.0'
+stages:
+  prepare_data:
+    cmd: python ./prepare_data.py
+    deps:
+    - path: ./archive/imdb-dataset.csv
+      hash: md5
+      md5: 308443a50e5c993e7b8a1cdb95750026
+      size: 66212309
+    - path: ./prepare_data.py
+      hash: md5
+      md5: afa3ba453fb4cd764eb5dda532fdaade
+      size: 666
+    params:
+      params.yaml:
+        data:
+          csv_file_path: ./archive/imdb-dataset.csv
+          test_set_ratio: 0.3
+          train_csv_save_path: ./archive/train.csv
+          test_csv_save_path: ./archive/test.csv
+    outs:
+    - path: ./archive/test.csv
+      hash: md5
+      md5: 90a4dc6b916dbef41d372e931378cddd
+      size: 19848031
+    - path: ./archive/train.csv
+      hash: md5
+      md5: 901990d46f51767548b81e1cc4dafe0c
+      size: 46514309
+  make_features:
+    cmd: python ./make_features.py
+    deps:
+    - path: ./archive/test.csv
+      hash: md5
+      md5: 90a4dc6b916dbef41d372e931378cddd
+      size: 19848031
+    - path: ./archive/train.csv
+      hash: md5
+      md5: 901990d46f51767548b81e1cc4dafe0c
+      size: 46514309
+    - path: ./make_features.py
+      hash: md5
+      md5: f2558b698a5ddc1a9e54e4d2862e8913
+      size: 920
+    params:
+      params.yaml:
+        features:
+          vectorizer: tfidf-vectorizer
+          train_features_save_path: ./archive/train.joblib
+          test_features_save_path: ./archive/test.joblib
+    outs:
+    - path: ./archive/test.joblib
+      hash: md5
+      md5: 00360989c79371993725a19a7b4559be
+      size: 15817219
+    - path: ./archive/train.joblib
+      hash: md5
+      md5: 04f721702deb3045b43a90861af5fa29
+      size: 37416227
+  train:
+    cmd: python ./train.py
+    deps:
+    - path: ./archive/train.csv
+      hash: md5
+      md5: 901990d46f51767548b81e1cc4dafe0c
+      size: 46514309
+    - path: ./archive/train.joblib
+      hash: md5
+      md5: 04f721702deb3045b43a90861af5fa29
+      size: 37416227
+    - path: ./train.py
+      hash: md5
+      md5: 9f914bdaa21941c7c71a779f4f28f27e
+      size: 690
+    params:
+      params.yaml:
+        train:
+          penalty: l2
+          C: 1.0
+          solver: lbfgs
+          model_save_path: ./archive/model.joblib
+    outs:
+    - path: ./archive/model.joblib
+      hash: md5
+      md5: 915cc66765a71b70f36952ab34e3f0b9
+      size: 704335
+  evaluate:
+    cmd: python ./evaluate.py
+    deps:
+    - path: ./archive/model.joblib
+      hash: md5
+      md5: 915cc66765a71b70f36952ab34e3f0b9
+      size: 704335
+    - path: ./archive/test.csv
+      hash: md5
+      md5: 90a4dc6b916dbef41d372e931378cddd
+      size: 19848031
+    - path: ./archive/test.joblib
+      hash: md5
+      md5: 00360989c79371993725a19a7b4559be
+      size: 15817219
+    - path: ./evaluate.py
+      hash: md5
+      md5: b6b80e997056027114a778d9f1f8d4d3
+      size: 955
+    params:
+      params.yaml:
+        evaluate:
+          metric: f1_score
+          results_save_path: ./archive/results.yaml
+    outs:
+    - path: ./archive/results.yaml
+      hash: md5
+      md5: dc851204c4832c10cf54357cf7689e8d
+      size: 30
